@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}管理后台{% endblock %}
+{% block content %}
+
+<div class="section-title">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+  管理后台
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card border-registering">
+    <div class="stat-num">{{ stats.registering }}</div>
+    <div class="stat-label">报名中</div>
+  </div>
+  <div class="stat-card border-ongoing">
+    <div class="stat-num">{{ stats.ongoing }}</div>
+    <div class="stat-label">进行中</div>
+  </div>
+  <div class="stat-card border-upcoming">
+    <div class="stat-num">{{ stats.upcoming }}</div>
+    <div class="stat-label">即将开始</div>
+  </div>
+  <div class="stat-card border-ended">
+    <div class="stat-num">{{ stats.ended }}</div>
+    <div class="stat-label">已结束</div>
+  </div>
+  <div class="stat-card border-total">
+    <div class="stat-num">{{ stats.total }}</div>
+    <div class="stat-label">总赛事</div>
+  </div>
+  <div class="stat-card border-manual">
+    <div class="stat-num">{{ stats.manual }}</div>
+    <div class="stat-label">手动录入</div>
+  </div>
+</div>
+
+<div class="admin-actions">
+  <a href="/admin/add" class="btn">+ 添加赛事</a>
+  <a href="/admin/export/csv" class="btn secondary">⬇ 导出 CSV</a>
+</div>
+
+<div class="admin-dash-grid">
+  <div class="admin-card">
+    <div class="admin-card-title">数据来源分布</div>
+    <div class="source-bar-chart">
+      {% for s in source_stats %}
+      <div class="source-bar-item">
+        <span class="source-bar-label">
+          <span class="source-tag src-{{ s.source }}">{{ source_display.get(s.source, s.source) }}</span>
+        </span>
+        <div class="source-bar-track">
+          <div class="source-bar-fill" style="width:{{ (s.cnt / source_stats[0].cnt * 100)|int if source_stats else 0 }}%"></div>
+        </div>
+        <span class="source-bar-count">{{ s.cnt }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="admin-card">
+    <div class="admin-card-title">最近更新</div>
+    <div class="recent-list">
+      {% for c in recent %}
+      <a href="/competition/{{ c.id }}" class="recent-item">
+        <span class="badge {% if c.status == 'ongoing' %}ongoing{% elif c.status == 'upcoming' %}upcoming{% elif c.status == 'registering' %}registering{% else %}ended{% endif %}">
+          {% if c.status == 'ongoing' %}进行中{% elif c.status == 'upcoming' %}即将开始{% elif c.status == 'registering' %}报名中{% else %}已结束{% endif %}
+        </span>
+        <span class="recent-name">{{ c.name }}</span>
+        <span class="recent-date">{{ c.updated_at[:10] if c.updated_at else '' }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="admin-section-header">
+  <span>全部赛事 <small class="sub">最新 50 条</small></span>
+  <a href="/admin/list" class="btn small">查看全部 <span style="margin-left:4px">→</span></a>
+</div>
+
+{% if competitions %}
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>状态</th>
+  <th>名称</th>
+  <th>来源</th>
+  <th>时间</th>
+  <th>操作</th>
+</tr>
+</thead>
+<tbody>
+{% for comp in competitions %}
+<tr>
+  <td>
+    {% if comp.status == 'ongoing' %}
+    <span class="badge ongoing">进行中</span>
+    {% elif comp.status == 'upcoming' %}
+    <span class="badge upcoming">即将开始</span>
+    {% elif comp.status == 'registering' %}
+    <span class="badge registering">报名中</span>
+    {% else %}
+    <span class="badge ended">已结束</span>
+    {% endif %}
+  </td>
+  <td class="name-cell">
+    <a href="/competition/{{ comp.id }}">{{ comp.name }}</a>
+    {% if comp.organizer %}<small>{{ comp.organizer }}</small>{% endif %}
+  </td>
+  <td><span class="source-tag src-{{ comp.source }}">{{ source_display.get(comp.source, comp.source) }}</span></td>
+  <td class="time-cell">{{ comp.comp_start[:10] if comp.comp_start else '-' }}</td>
+  <td class="action-cell">
+    <a href="/admin/edit/{{ comp.id }}" class="btn small">编辑</a>
+    <form method="POST" action="/admin/delete/{{ comp.id }}" onsubmit="return confirm('确认删除?')">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn small danger">删除</button>
+    </form>
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="empty-state">
+  <p>暂无数据，请先<a href="/admin/add">添加赛事</a></p>
+</div>
+{% endif %}
+
+{% endblock %}

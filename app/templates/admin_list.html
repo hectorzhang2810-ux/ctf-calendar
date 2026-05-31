@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}管理列表{% endblock %}
+{% block content %}
+
+<div class="section-title">
+  赛事列表
+  <span class="sub">共 {{ total }} 条</span>
+</div>
+
+<form class="search-bar" method="GET" action="/admin/list">
+  <input type="text" name="q" placeholder="搜索比赛名称..." value="{{ q }}" autocomplete="off">
+  <select name="status">
+    <option value="">所有状态</option>
+    <option value="registering" {{ 'selected' if active_status == 'registering' }}>报名中</option>
+    <option value="ongoing" {{ 'selected' if active_status == 'ongoing' }}>进行中</option>
+    <option value="upcoming" {{ 'selected' if active_status == 'upcoming' }}>即将开始</option>
+    <option value="finished" {{ 'selected' if active_status == 'finished' }}>已结束</option>
+  </select>
+  <select name="source">
+    <option value="">所有来源</option>
+    {% for s in sources %}
+    <option value="{{ s }}" {{ 'selected' if active_source == s }}>{{ source_display.get(s, s) }}</option>
+    {% endfor %}
+  </select>
+  <input type="hidden" name="per_page" value="{{ per_page }}">
+  <button type="submit">筛选</button>
+  <a href="/admin/list" class="clear-btn" style="margin-left:0">清除</a>
+</form>
+
+<div class="admin-actions">
+  <a href="/admin/add" class="btn">+ 添加赛事</a>
+  <a href="/admin/export/csv" class="btn secondary">⬇ 导出 CSV</a>
+</div>
+
+{% if competitions %}
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>状态</th>
+  <th>名称</th>
+  <th>来源</th>
+  <th>主办</th>
+  <th>时间</th>
+  <th>操作</th>
+</tr>
+</thead>
+<tbody>
+{% for comp in competitions %}
+<tr>
+  <td>
+    {% if comp.status == 'ongoing' %}
+    <span class="badge ongoing">进行中</span>
+    {% elif comp.status == 'upcoming' %}
+    <span class="badge upcoming">即将开始</span>
+    {% elif comp.status == 'registering' %}
+    <span class="badge registering">报名中</span>
+    {% else %}
+    <span class="badge ended">已结束</span>
+    {% endif %}
+  </td>
+  <td class="name-cell">
+    <a href="/competition/{{ comp.id }}">{{ comp.name }}</a>
+  </td>
+  <td><span class="source-tag src-{{ comp.source }}">{{ source_display.get(comp.source, comp.source) }}</span></td>
+  <td style="font-size:.82rem;color:var(--text-secondary)">{{ comp.organizer or '-' }}</td>
+  <td class="time-cell">{{ comp.comp_start[:10] if comp.comp_start else '-' }}</td>
+  <td class="action-cell">
+    <a href="/admin/edit/{{ comp.id }}" class="btn small">编辑</a>
+    <form method="POST" action="/admin/delete/{{ comp.id }}" onsubmit="return confirm('确认删除?')">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="btn small danger">删除</button>
+    </form>
+  </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<div class="pagination">
+  <span>每页
+    <select onchange="this.form.submit()" form="per-page-form" style="padding:4px 8px;border:1px solid var(--border);border-radius:4px">
+      <option value="10" {{ 'selected' if per_page == 10 }}>10</option>
+      <option value="50" {{ 'selected' if per_page == 50 }}>50</option>
+      <option value="100" {{ 'selected' if per_page == 100 }}>100</option>
+      <option value="200" {{ 'selected' if per_page == 200 }}>200</option>
+    </select>
+  </span>
+  <form id="per-page-form" method="GET" action="/admin/list" style="display:none">
+    <input type="hidden" name="q" value="{{ q }}">
+    <input type="hidden" name="status" value="{{ active_status }}">
+    <input type="hidden" name="source" value="{{ active_source }}">
+  </form>
+
+  <span style="display:flex;gap:8px;align-items:center">
+    {% if page > 1 %}
+    <a href="?page={{ page-1 }}&per_page={{ per_page }}&q={{ q }}&status={{ active_status }}&source={{ active_source }}">上一页</a>
+    {% endif %}
+    <span>{{ page }} / {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="?page={{ page+1 }}&per_page={{ per_page }}&q={{ q }}&status={{ active_status }}&source={{ active_source }}">下一页</a>
+    {% endif %}
+  </span>
+</div>
+
+{% else %}
+<div class="empty-state">
+  {% if q or active_status or active_source %}
+  <p>无匹配赛事，尝试修改筛选条件</p>
+  {% else %}
+  <p>暂无数据</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

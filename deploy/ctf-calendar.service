@@ -1,0 +1,23 @@
+[Unit]
+Description=CTF Calendar Aggregator
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/ctf-calendar
+Environment=FLASK_APP=app
+# 安全配置：以下密钥必须通过环境变量设置（部署前修改）
+#   SECRET_KEY          — Flask 会话签名密钥，生产环境必须改为随机字符串
+#   ADMIN_USERNAME      — 管理后台用户名
+#   ADMIN_PASSWORD      — 管理后台密码（建议 16 位以上随机密码）
+# 示例：
+#   Environment=SECRET_KEY="your-64-char-random-hex"
+#   Environment=ADMIN_USERNAME="admin"
+#   Environment=ADMIN_PASSWORD="your-strong-password"
+ExecStart=/opt/ctf-calendar/venv/bin/gunicorn -w 2 -b 127.0.0.1:5000 'app:create_app()'
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

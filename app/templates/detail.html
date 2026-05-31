@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}{{ comp.name }}{% endblock %}
+{% block content %}
+
+<div class="detail-header">
+  <div class="detail-title-row">
+    <h2>{{ comp.name }}</h2>
+    <div class="detail-badges">
+      <span class="badge {{ comp.status }}">
+        {% if comp.status == 'ongoing' %}进行中
+        {% elif comp.status == 'upcoming' %}即将开始
+        {% elif comp.status == 'registering' %}报名中
+        {% else %}已结束
+        {% endif %}
+      </span>
+      <span class="source-tag src-{{ comp.source }}">{{ comp.source }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="detail-grid">
+  <div class="detail-card">
+    <h3>基本信息</h3>
+    <table class="detail-table">
+      <tr>
+        <th>主办单位</th>
+        <td>{{ comp.organizer or '-' }}</td>
+      </tr>
+      <tr>
+        <th>比赛类型</th>
+        <td>{{ comp.type }}</td>
+      </tr>
+      <tr>
+        <th>比赛形式</th>
+        <td>{{ comp.format }}</td>
+      </tr>
+      <tr>
+        <th>参赛方式</th>
+        <td>{{ comp.mode }}</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="detail-card">
+    <h3>时间安排</h3>
+    <table class="detail-table">
+      <tr>
+        <th>比赛时间</th>
+        <td>
+          {% if comp.comp_start %}
+            {{ comp.comp_start[:16] }} ~ {{ comp.comp_end[:16] if comp.comp_end else comp.comp_end }}
+          {% else %}
+            -
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th>报名时间</th>
+        <td>
+          {% if comp.reg_start %}
+            {{ comp.reg_start[:10] }} ~ {{ comp.reg_end[:10] if comp.reg_end else '' }}
+          {% else %}
+            -
+          {% endif %}
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  {% if comp.detail %}
+  <div class="detail-card full-width">
+    <h3>备注</h3>
+    <p>{{ comp.detail }}</p>
+  </div>
+  {% endif %}
+
+  <div class="detail-card">
+    <h3>链接</h3>
+    <p>
+      {% if comp.link %}
+        <a href="{{ comp.link }}" target="_blank" rel="noopener" class="btn">查看原文 &rarr;</a>
+      {% else %}
+        -
+      {% endif %}
+    </p>
+  </div>
+</div>
+
+{% endblock %}

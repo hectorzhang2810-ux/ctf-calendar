@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block title %}CTF 赛事日历{% endblock %}
+{% block content %}
+
+<div class="section-title">赛事概览</div>
+
+<div class="stats-grid">
+  <div class="stat-card border-total">
+    <div class="stat-num">{{ stats.total or 0 }}</div>
+    <div class="stat-label">总赛事</div>
+  </div>
+  <div class="stat-card border-ongoing">
+    <div class="stat-num">{{ stats.ongoing or 0 }}</div>
+    <div class="stat-label">进行中</div>
+  </div>
+  <div class="stat-card border-upcoming">
+    <div class="stat-num">{{ stats.upcoming or 0 }}</div>
+    <div class="stat-label">即将开始</div>
+  </div>
+  <div class="stat-card border-ended">
+    <div class="stat-num">{{ stats.ended or 0 }}</div>
+    <div class="stat-label">已结束</div>
+  </div>
+</div>
+
+<div class="filter-tabs">
+  <a href="/" class="{% if not active_status and not active_source and not active_type and not q %}active{% endif %}">全部</a>
+  <a href="/?status=ongoing" class="{% if active_status == 'ongoing' %}active{% endif %}">进行中</a>
+  <a href="/?status=upcoming" class="{% if active_status == 'upcoming' %}active{% endif %}">即将开始</a>
+  <a href="/?status=registering" class="{% if active_status == 'registering' %}active{% endif %}">报名中</a>
+  <a href="/?status=ended" class="{% if active_status == 'ended' %}active{% endif %}">已结束</a>
+</div>
+
+<form class="search-bar" method="GET">
+  <input type="text" name="q" placeholder="搜索比赛名称..." value="{{ q }}" autocomplete="off">
+  <select name="source">
+    <option value="">全部来源</option>
+    {% for key, label in source_display.items() %}
+    <option value="{{ key }}" {{ 'selected' if active_source == key }}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <select name="type">
+    <option value="">全部类型</option>
+    <option value="CTF" {{ 'selected' if active_type == 'CTF' }}>CTF</option>
+    <option value="AWD" {{ 'selected' if active_type == 'AWD' }}>AWD</option>
+  </select>
+  <select name="per_page">
+    <option value="50" {{ 'selected' if per_page == 50 }}>50条/页</option>
+    <option value="100" {{ 'selected' if per_page == 100 }}>100条/页</option>
+    <option value="200" {{ 'selected' if per_page == 200 }}>200条/页</option>
+  </select>
+  {% if active_status %}<input type="hidden" name="status" value="{{ active_status }}">{% endif %}
+  <button type="submit">筛选</button>
+  {% if q or active_source or active_type or active_status %}
+  <a href="/" class="clear-btn">清除</a>
+  {% endif %}
+</form>
+
+{% if competitions %}
+
+{% if month_competitions and not active_status and not active_source and not active_type and not q %}
+<div class="section-title">
+  本月赛历
+  <span class="sub">{{ now.strftime('%Y年%m月') }}</span>
+</div>
+<div class="month-grid">
+  {% for comp in month_competitions %}
+  <div class="comp-card border-{{ comp.status }}">
+    <div class="card-header">
+      <a href="/competition/{{ comp.id }}" class="card-title">{{ comp.name }}</a>
+      {% if comp.status == 'ongoing' %}
+      <span class="badge ongoing">进行中</span>
+      {% elif comp.status == 'upcoming' %}
+      <span class="badge upcoming">即将开始</span>
+      {% elif comp.status == 'registering' %}
+      <span class="badge registering">报名中</span>
+      {% endif %}
+    </div>
+    {% if comp.organizer %}
+    <div class="card-meta"><span>{{ comp.organizer }}</span></div>
+    {% endif %}
+    <div class="card-meta">
+      <span>{{ comp.comp_start[:10] if comp.comp_start else '?' }} ~ {{ comp.comp_end[:10] if comp.comp_end else '?' }}</span>
+      <span>{{ comp.mode }}/{{ comp.format }}</span>
+    </div>
+    <div class="card-footer">
+      <span class="source-tag src-{{ comp.source }}">{{ source_display.get(comp.source, comp.source) }}</span>
+      {% if comp.link %}
+      <a href="{{ comp.link }}" target="_blank" rel="noopener" class="card-link">详情 &rarr;</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="section-title">
+  全部赛事
+  <span class="sub">共 {{ total }} 项</span>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+  <th>状态</th>
+  <th>名称</th>
+  <th>开始</th>
+  <th>结束</th>
+  <th>形式</th>
+  <th>来源</th>
+</tr>
+</thead>
+<tbody>
+{% for comp in competitions %}
+<tr>
+  <td>
+    {% if comp.status == 'ongoing' %}
+    <span class="badge ongoing">进行中</span>
+    {% elif comp.status == 'upcoming' %}
+    <span class="badge upcoming">即将开始</span>
+    {% elif comp.status == 'registering' %}
+    <span class="badge registering">报名中</span>
+    {% else %}
+    <span class="badge ended">已结束</span>
+    {% endif %}
+  </td>
+  <td class="name-cell">
+    <a href="/competition/{{ comp.id }}">{{ comp.name }}</a>
+    {% if comp.organizer %}
+    <small>{{ comp.organizer }}</small>
+    {% endif %}
+  </td>
+  <td class="time-cell">{{ comp.comp_start[:10] if comp.comp_start else '-' }}</td>
+  <td class="time-cell">{{ comp.comp_end[:10] if comp.comp_end else '-' }}</td>
+  <td>{{ comp.mode }}</td>
+  <td><span class="source-tag src-{{ comp.source }}">{{ source_display.get(comp.source, comp.source) }}</span></td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+{% if total_pages > 1 %}
+{% macro _paginate(page_num) %}?page={{ page_num }}&per_page={{ per_page }}{% if q %}&q={{ q }}{% endif %}{% if active_status %}&status={{ active_status }}{% endif %}{% if active_source %}&source={{ active_source }}{% endif %}{% if active_type %}&type={{ active_type }}{% endif %}{% endmacro %}
+<nav class="pagination">
+  {% if page > 1 %}
+  <a href="{{ _paginate(page - 1) }}">&larr; 上一页</a>
+  {% endif %}
+  <span>第 {{ page }} / {{ total_pages }} 页（共 {{ total }} 项）</span>
+  {% if page < total_pages %}
+  <a href="{{ _paginate(page + 1) }}">下一页 &rarr;</a>
+  {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+  {% if q or active_source or active_status or active_type %}
+  <p>未找到符合条件的赛事</p>
+  <p style="margin-top:8px"><a href="/" class="btn secondary">清除筛选条件</a></p>
+  {% else %}
+  <p>暂无赛事数据</p>
+  <p style="margin-top:8px">运行 <code>flask fetch</code> 采集数据，或在 <a href="/admin">管理后台</a> 手动录入。</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

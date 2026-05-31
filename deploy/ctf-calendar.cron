@@ -1,0 +1,2 @@
+# 每小时采集一次赛事数据
+0 * * * * cd /opt/ctf-calendar && venv/bin/flask fetch >> /var/log/ctf-calendar/fetch.log 2>&1

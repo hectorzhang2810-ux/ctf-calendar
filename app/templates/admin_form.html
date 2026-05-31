@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}{{ '编辑赛事' if editing else '添加赛事' }}{% endblock %}
+{% block content %}
+
+<div class="section-title">{{ '编辑赛事' if editing else '添加赛事' }}</div>
+
+<form class="comp-form" method="POST">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token }}">
+
+  <div class="admin-section-header">基本信息</div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="name">比赛名称 *</label>
+      <input type="text" id="name" name="name" value="{{ comp.name or '' }}" required autofocus>
+    </div>
+    <div class="form-group">
+      <label for="source">来源</label>
+      <select id="source" name="source">
+        <option value="manual" {{ 'selected' if comp.get('source', 'manual') == 'manual' }}>手动录入</option>
+        {% for key, label in source_display.items() %}
+        {% if key != 'manual' %}
+        <option value="{{ key }}" {{ 'selected' if comp.get('source') == key }}>{{ label }}</option>
+        {% endif %}
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="type">比赛类型</label>
+      <select id="type" name="type">
+        <option value="CTF" {{ 'selected' if comp.get('type') == 'CTF' }}>CTF</option>
+        <option value="AWD" {{ 'selected' if comp.get('type') == 'AWD' }}>AWD</option>
+        <option value="综合" {{ 'selected' if comp.get('type') == '综合' }}>综合</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="format">比赛形式</label>
+      <select id="format" name="format">
+        <option value="Jeopardy" {{ 'selected' if comp.get('format') == 'Jeopardy' }}>Jeopardy</option>
+        <option value="AWD" {{ 'selected' if comp.get('format') == 'AWD' }}>AWD</option>
+        <option value="攻防" {{ 'selected' if comp.get('format') == '攻防' }}>攻防</option>
+        <option value="未知" {{ 'selected' if comp.get('format') == '未知' }}>未知</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="mode">参赛方式</label>
+      <select id="mode" name="mode">
+        <option value="线上" {{ 'selected' if comp.get('mode') == '线上' }}>线上</option>
+        <option value="线下" {{ 'selected' if comp.get('mode') == '线下' }}>线下</option>
+        <option value="线上+线下" {{ 'selected' if comp.get('mode') == '线上+线下' }}>线上+线下</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="admin-section-header">时间安排</div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="comp_start">开始时间 *</label>
+      <input type="datetime-local" id="comp_start" name="comp_start"
+        value="{{ (comp.comp_start[:16] if comp.comp_start else '') }}">
+    </div>
+    <div class="form-group">
+      <label for="comp_end">结束时间 *</label>
+      <input type="datetime-local" id="comp_end" name="comp_end"
+        value="{{ (comp.comp_end[:16] if comp.comp_end else '') }}">
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="reg_start">报名开始</label>
+      <input type="datetime-local" id="reg_start" name="reg_start"
+        value="{{ (comp.reg_start[:16] if comp.reg_start else '') }}">
+    </div>
+    <div class="form-group">
+      <label for="reg_end">报名截止</label>
+      <input type="datetime-local" id="reg_end" name="reg_end"
+        value="{{ (comp.reg_end[:16] if comp.reg_end else '') }}">
+    </div>
+  </div>
+
+  <div class="admin-section-header">详细信息</div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label for="organizer">主办单位</label>
+      <input type="text" id="organizer" name="organizer" value="{{ comp.organizer or '' }}">
+    </div>
+    <div class="form-group">
+      <label for="link">比赛链接</label>
+      <input type="url" id="link" name="link" value="{{ comp.link or '' }}" placeholder="https://">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="detail">备注</label>
+    <textarea id="detail" name="detail" rows="3" placeholder="可选附加信息">{{ comp.detail or '' }}</textarea>
+  </div>
+
+  <div class="form-actions">
+    <button type="submit" class="btn">{{ '保存' if editing else '添加' }}</button>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn secondary">取消</a>
+  </div>
+</form>
+
+{% endblock %}

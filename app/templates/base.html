@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}CTF 赛事日历{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<nav>
+  <div class="nav-inner">
+    <a href="/" class="brand">CTF<span>赛事日历</span></a>
+    <div class="nav-links">
+      <a href="/" {% if request.path == '/' %}class="active"{% endif %}>首页</a>
+      {% if session.get('admin_logged_in') %}
+      <a href="/admin" {% if request.path.startswith('/admin') %}class="active"{% endif %}>管理</a>
+      <a href="/auth/change-password">修改密码</a>
+      <form method="POST" action="/auth/logout" style="display:inline">
+        <button type="submit" class="nav-link">退出</button>
+      </form>
+      {% else %}
+      <a href="/auth/login" {% if request.path == '/auth/login' %}class="active"{% endif %}>登录</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<main>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <ul class="flash">
+    {% for cat, msg in messages %}
+    <li class="{{ cat }}">{{ msg }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+</main>
+
+<footer>
+  <p>CTF 赛事日历 &mdash; 数据来源: Hello-CTF, NSSCTF, i春秋, BugKu, CTFPlus, 河南/安徽/江苏/广东/山东/浙江/北京教育厅（委）公告</p>
+</footer>
+</body>
+</html>
